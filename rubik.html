@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js canvas - geometry - cube</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="./three.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+
+		<script src="./Projector.js"></script>
+		<script src="./CanvasRenderer.js"></script>
+
+		<script src="./stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+
+			var camera, scene, renderer;
+			var cube = [];
+			var group;
+			var cubes = [];
+			
+			var faces = [];
+			var turnable;
+			
+			
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			init();
+			animate();
+			
+			function createCube(size, positionX, positionY, positionZ, colors){
+				var cube;
+				var geometry = new THREE.BoxGeometry( size, size, size );
+                var id = 0;
+                colors.forEach(function(color){
+                    geometry.faces[id].color.setHex(color);
+                    id++;
+                    geometry.faces[id].color.setHex(color);
+                    id++;
+                });
+				var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
+                cube = new THREE.Mesh( geometry, material );
+				cube.position.y = positionY;
+				cube.position.x = positionX;
+				cube.position.z = positionZ;
+                return cube;
+			}
+
+			function generateLine(positionY,positionZ, colors){
+                var init = 60
+                var cube_len = cube.length;
+                for(var i=cube_len; i < cube_len+3; i++){
+					cube[i] = createCube(50, init, positionY , positionZ, colors);
+					init-=60;
+                	scene.add( cube[i] );
+                }
+			}
+
+			function generateFace(positionZ, colors, name){
+				cube = [];
+				generateLine(60, positionZ, colors);
+                generateLine(0, positionZ, colors);
+                generateLine(-60, positionZ, colors);
+                cube.forEach(function(el,id){
+                	el.name = name+ id;
+                });
+                
+				group = new THREE.Object3D();//create an empty container
+				group.add( cube[0] );
+				group.add( cube[1] );
+				group.add( cube[2] );
+				group.add( cube[3] );
+				group.add( cube[4] );
+				group.add( cube[5] );
+				group.add( cube[6] );
+				group.add( cube[7] );
+				group.add( cube[8] );
+				cubes.push(cube);
+				faces.push(group);
+				scene.add( group );//when done, add the group to the scene
+			}
+			
+			turnable = 	new THREE.Object3D();
+			scene.add( turnable );
+			function selectFace(face_name){
+				retrieveBlocks();
+				switch(face_name) {
+			        case 'front':
+			        	cubes[0].forEach(function(el){
+			        		turnable.add(el);
+			        	})
+    				 	return turnable;
+			            break;
+			        case 'left':
+		        		turnable.add( cubes[0][2] );
+		        		turnable.add( cubes[0][5] );
+		        		turnable.add( cubes[0][8] );
+		        		turnable.add( cubes[1][2] );
+		        		turnable.add( cubes[1][5] );
+		        		turnable.add( cubes[1][8] );
+		        		turnable.add( cubes[2][2] );
+		        		turnable.add( cubes[2][5] );
+		        		turnable.add( cubes[2][8] );
+		        		return turnable;
+			            break;
+			        case 'right':
+		        		turnable.add( cubes[0][0] );
+		        		turnable.add( cubes[0][3] );
+		        		turnable.add( cubes[0][6] );
+		        		turnable.add( cubes[1][0] );
+		        		turnable.add( cubes[1][3] );
+		        		turnable.add( cubes[1][6] );
+		        		turnable.add( cubes[2][0] );
+		        		turnable.add( cubes[2][3] );
+		        		turnable.add( cubes[2][6] );
+		        		return turnable;
+			            break;
+			        case 'back':
+			        	cubes[2].forEach(function(el){
+			        		turnable.add(el);
+			        	})
+    				 	return turnable;
+			            break; 
+			        case 'bottom':
+
+		        		turnable.add( cubes[0][6] );
+		        		turnable.add( cubes[0][7] );
+		        		turnable.add( cubes[0][8] );
+		        		turnable.add( cubes[1][6] );
+		        		turnable.add( cubes[1][7] );
+		        		turnable.add( cubes[1][8] );
+		        		turnable.add( cubes[2][6] );
+		        		turnable.add( cubes[2][7] );
+		        		turnable.add( cubes[2][8] );
+		        		
+		        		return turnable;
+			            break;  
+		    	} 
+				
+			}
+			
+			function retrieveBlocks(){
+				while(turnable.children.length != 0){
+					var el = turnable.children.pop();
+					if(el.position.z == -60){
+	        			faces[2].add(el);
+	        		}else if(el.position.z == 0){
+	        			faces[1].add(el);
+	        		}else{
+	        			faces[0].add(el);
+	        		}
+				}
+			}
+
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.y = 291.13420664042053;
+				camera.position.x = 306;
+				camera.position.z = 265.3601554074723;
+				camera.rotation.x = -0.8316801354438699;
+				camera.rotation.y = 0.6634934704771075;
+				camera.rotation.z = 0.594224761297232;
+	
+				
+
+
+
+				scene = new THREE.Scene();
+					
+                var colors = [0xC41E3A, 0x009E60, 0x0051BA, 0xFF5800, 0xFFD500, 0xFFFFFF];
+
+				generateFace(60, colors, "front-");
+				generateFace(0, colors, "middle-");
+				generateFace(-60, colors, "back-");
+				faces.forEach(function(face){
+					scene.add( face );
+				});
+
+				renderer = new THREE.CanvasRenderer();
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+				
+				
+				window.addEventListener("keydown", checkKeyPressed, false);
+ 
+			
+			}
+			
+			var rotSpeed = .08 
+				
+		
+			function checkRotation(event){
+			
+			    var x = camera.position.x,
+			        y = camera.position.y,
+			        z = camera.position.z;
+			
+			    if (event == "left" ){ 
+			        camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
+			        camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
+			    } else if (event == "right"){
+			        camera.position.x = x * Math.cos(rotSpeed) - z * Math.sin(rotSpeed);
+			        camera.position.z = z * Math.cos(rotSpeed) + x * Math.sin(rotSpeed);
+			    } else if (event == "up"){
+			        camera.position.y = y * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
+			        camera.position.z = z * Math.cos(rotSpeed) - y * Math.sin(rotSpeed);
+			    } else if (event == "down"){
+			        camera.position.y = y * Math.cos(rotSpeed) - z * Math.sin(rotSpeed);
+			        camera.position.z = z * Math.cos(rotSpeed) + y * Math.sin(rotSpeed);
+			    }
+			    
+			    
+			    camera.lookAt(scene.position);
+			    
+			} 
+
+
+			function checkKeyPressed(e) {
+			    switch(e.keyCode) {
+			    	// w
+			    	case 87:
+			    		selectFace('front').rotateZ(Math.PI / 2);
+			    		break;
+		    		// a
+			    	case 65:
+			        	selectFace('left').rotateX(Math.PI / 2);
+			    		break;
+		    		// d
+			    	case 68:
+			        	selectFace('right').rotateX(Math.PI / 2);
+			    		break;
+		    		// d
+			    	case 88:
+			        	selectFace('bottom').rotateY(Math.PI / 2);
+			        	break;
+		    		// s
+			    	case 83:
+			        	selectFace('back').rotateZ(Math.PI / 2);
+			        	break;
+		    		// left arrow
+			        case 37:
+			        	checkRotation("left");
+			            break;
+		            // up arrow
+			        case 38:
+			        	checkRotation("up");
+			            break;
+		            // right arrow
+			        case 39:
+			        	checkRotation("right");
+			            break;
+		            // down arrow
+			        case 40:
+			        	checkRotation("down");
+			            break;  
+		    	} 
+			}
+			
+
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+				renderer.render( scene, camera );
+
+			}
+			
+			function swapPosition(c1 , c2){
+				console.log(c1.position);
+				console.log(c2.position);
+				var aux = {};
+				for(key in c1.position){
+					aux[key] = c1.position[key];
+					c1.position[key] = c2.position[key];
+					c2.position[key] = aux[key];
+				}
+				console.log(c1.position);
+				console.log(c2.position);
+				
+			}
+			
+			// Rotate an object around an arbitrary axis in object space
+			var rotObjectMatrix;
+   
+		</script>
+
+	</body>
+</html>
