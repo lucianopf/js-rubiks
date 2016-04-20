@@ -2,5 +2,6 @@
 Rubiks made with Three.js
 
 ## Usage:
-A,S,D,W,X rotate faces.
-Arrows rotate the camera.
+  - A,S,D,W,X to rotate faces.
+  - Arrows to rotate the camera.
+
